@@ -49,4 +49,30 @@ class InMemoryDB:
 
     def update_job(self, job_id: int, **fields) -> Optional[dict]:
         job = self.jobs.get(job_id)
-        
+        if job is None:
+            return None
+        job.update({k: v for k , v in fields.items() if v is not None})
+        return job
+
+    def delete_job(self, job_id: int) -> bool:
+        return self.jobs.pop(job_id, None) is not None
+
+    # APPLICATIONS
+
+    def create_application(self, **kwargs) -> dict:
+        app_id = next(self._application_ids)
+        application = {"id": app_id, **kwargs}
+        self.applications[app_id] = application
+        return application
+
+    def list_applications_for_user(self, user_id: int) -> list[dict]:
+        return [a for a in self.applications.values() if a["user_id"] == user_id]
+
+    def has_applied(self, job_id: int, user_id: int) -> bool:
+        return any(
+            a["job_id"] == job_id and a["user_id"] == user_id
+            for a in self.applications.values()
+        )
+
+
+db = InMemoryDB()
